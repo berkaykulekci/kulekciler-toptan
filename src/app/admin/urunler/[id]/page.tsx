@@ -14,6 +14,7 @@ type Product = {
   category: string;
   package_info: string | null;
   min_order_note: string | null;
+  stock: number;
   is_featured: boolean;
   is_active: boolean;
 };
@@ -91,6 +92,7 @@ export default function AdminEditProduct() {
         category: p.category,
         package_info: p.package_info,
         min_order_note: p.min_order_note,
+        stock: p.stock,
         is_featured: p.is_featured,
         is_active: p.is_active,
       })
@@ -151,7 +153,7 @@ export default function AdminEditProduct() {
         const path = imageUrl.substring(idx + marker.length);
         await supabase.storage.from("products-image").remove([path]);
       }
-    } catch {}
+    } catch { }
   }
 
   async function swapOrder(a: Img, b: Img) {
@@ -250,9 +252,22 @@ export default function AdminEditProduct() {
           </div>
         </div>
 
-        <div>
-          <label className="text-sm font-medium">Minimum Sipariş Notu</label>
-          <input className="mt-1 w-full rounded-xl border px-4 py-3 text-sm" value={p.min_order_note ?? ""} onChange={(e) => setP({ ...p, min_order_note: e.target.value })} />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="text-sm font-medium">Minimum Sipariş Notu</label>
+            <input className="mt-1 w-full rounded-xl border px-4 py-3 text-sm" value={p.min_order_note ?? ""} onChange={(e) => setP({ ...p, min_order_note: e.target.value })} />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Stok Adedi</label>
+            <input
+              type="number"
+              className="mt-1 w-full rounded-xl border px-4 py-3 text-sm"
+              value={p.stock ?? 0}
+              onChange={(e) => setP({ ...p, stock: parseInt(e.target.value) || 0 })}
+              min={0}
+            />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-6">

@@ -4,8 +4,8 @@ import { SITE, whatsappPriceLink } from "@/lib/config";
 import BackButton from "@/components/BackButton";
 
 export default function ContactPage() {
-  const phoneNumber = "0554 121 41 21";
-  const whatsappNumber = "905541214121";
+  const phoneNumber = "0536 832 48 60";
+  const whatsappNumber = "905368324860";
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">

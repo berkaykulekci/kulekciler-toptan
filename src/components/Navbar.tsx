@@ -14,6 +14,9 @@ export default function Navbar() {
             <Link href="/urunler" className="hover:text-brand transition-colors duration-200">
               ÜRÜNLER
             </Link>
+            <Link href="/hakkimizda" className="hover:text-brand transition-colors duration-200">
+              HAKKIMIZDA
+            </Link>
             <Link href="/iletisim" className="hover:text-brand transition-colors duration-200">
               İLETİŞİM
             </Link>

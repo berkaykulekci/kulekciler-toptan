@@ -26,47 +26,80 @@ export default async function Home() {
         </div>
 
         <div className="container-custom relative">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-navy/10 bg-white/50 px-4 py-1.5 text-sm font-medium text-navy/80 backdrop-blur-sm mb-8">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
-              </span>
-              Gaziantep Toptan Satış
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="max-w-3xl lg:max-w-none">
+              <div className="inline-flex items-center gap-2 rounded-full border border-navy/10 bg-white/50 px-4 py-1.5 text-sm font-medium text-navy/80 backdrop-blur-sm mb-8">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
+                </span>
+                Gaziantep Toptan Satış
+              </div>
+
+              <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-navy mb-8 leading-[1.1]">
+                Gaziantep <br />
+                <span className="text-gradient">Külekçiler Hediyelik</span>
+              </h1>
+
+              <p className="text-lg md:text-xl text-navy/70 mb-10 max-w-xl leading-relaxed">
+                Külekçiler Toptan olarak Gaziantep merkezli hizmet vermekteyiz.
+                Züccaciye, mutfak ürünleri, hediyelik eşya ve hırdavat kategorilerinde geniş ürün çeşitliliği sunuyoruz.
+              </p>
+
+              <div className="flex flex-wrap gap-4">
+                <Link href="/urunler" className="btn-primary">
+                  Ürün Kataloğunu İncele
+                </Link>
+                <Link href="/iletisim" className="btn-secondary">
+                  İletişim
+                </Link>
+              </div>
+
+              <div className="mt-16 grid grid-cols-2 md:grid-cols-3 gap-8 border-t border-navy/5 pt-8">
+                <div>
+                  <div className="text-3xl font-bold text-navy mb-1">30.000+</div>
+                  <div className="text-sm font-medium text-navy/60">Ürün çeşitliliği</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-navy mb-1">1000+</div>
+                  <div className="text-sm font-medium text-navy/60">Aktif Müşteri</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-navy mb-1">Gaziantep & Çevre İller</div>
+                  <div className="text-sm font-medium text-navy/60">Toptan Satış</div>
+                </div>
+              </div>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-navy mb-8 leading-[1.1]">
-              Gaziantep <br />
-              <span className="text-gradient">Külekçiler Hediyelik</span>
-            </h1>
-
-            <p className="text-lg md:text-xl text-navy/70 mb-10 max-w-xl leading-relaxed">
-              Külekçiler Toptan olarak Gaziantep merkezli hizmet vermekteyiz.
-              Züccaciye, mutfak ürünleri, hediyelik eşya ve hırdavat kategorilerinde geniş ürün çeşitliliği sunuyoruz.
-            </p>
-
-            <div className="flex flex-wrap gap-4">
-              <Link href="/urunler" className="btn-primary">
-                Ürün Kataloğunu İncele
-              </Link>
-              <Link href="/iletisim" className="btn-secondary">
-                İletişim
-              </Link>
-            </div>
-
-            <div className="mt-16 grid grid-cols-2 md:grid-cols-3 gap-8 border-t border-navy/5 pt-8">
-              <div>
-                <div className="text-3xl font-bold text-navy mb-1">30.000+</div>
-                <div className="text-sm font-medium text-navy/60">Ürün çeşitliliği</div>
+            {/* Right Content - Slider */}
+            <div className="relative h-[500px] w-full hidden lg:block rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 lg:-translate-y-16">
+              <div className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
+                {[
+                  "/hero-bg-v2.jpg",
+                  "/hero-bg-v2.jpg",
+                  "/hero-bg-v2.jpg"
+                ].map((src, idx) => (
+                  <div key={idx} className="relative w-full h-full flex-shrink-0 snap-center">
+                    <img
+                      src={src}
+                      alt={`Store Image ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-navy/50 to-transparent" />
+                  </div>
+                ))}
               </div>
-              <div>
-                <div className="text-3xl font-bold text-navy mb-1">1000+</div>
-                <div className="text-sm font-medium text-navy/60">Aktif Müşteri</div>
+
+              {/* Slider Indicators (Visual Only) */}
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+                <div className="w-2 h-2 rounded-full bg-white/50"></div>
+                <div className="w-2 h-2 rounded-full bg-white/50"></div>
               </div>
-              <div>
-                <div className="text-3xl font-bold text-navy mb-1">Gaziantep & Çevre İller</div>
-                <div className="text-sm font-medium text-navy/60">Toptan Satış</div>
-              </div>
+
+
             </div>
           </div>
         </div>

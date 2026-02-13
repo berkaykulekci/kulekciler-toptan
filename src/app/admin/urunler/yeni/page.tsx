@@ -20,6 +20,7 @@ export default function AdminNewProduct() {
   const [category, setCategory] = useState("");
   const [packageInfo, setPackageInfo] = useState("");
   const [minOrderNote, setMinOrderNote] = useState("");
+  const [stock, setStock] = useState(0);
   const [isFeatured, setIsFeatured] = useState(false);
   const [isActive, setIsActive] = useState(true);
 
@@ -71,6 +72,7 @@ export default function AdminNewProduct() {
         category: category.trim(),
         package_info: packageInfo.trim(),
         min_order_note: minOrderNote.trim(),
+        stock: stock,
         is_featured: isFeatured,
         is_active: isActive,
       })
@@ -166,13 +168,26 @@ export default function AdminNewProduct() {
           </div>
         </div>
 
-        <div>
-          <label className="text-sm font-medium">Minimum Sipariş Notu</label>
-          <input
-            className="mt-1 w-full rounded-xl border px-4 py-3 text-sm"
-            value={minOrderNote}
-            onChange={(e) => setMinOrderNote(e.target.value)}
-          />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="text-sm font-medium">Minimum Sipariş Notu</label>
+            <input
+              className="mt-1 w-full rounded-xl border px-4 py-3 text-sm"
+              value={minOrderNote}
+              onChange={(e) => setMinOrderNote(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Stok Adedi</label>
+            <input
+              type="number"
+              className="mt-1 w-full rounded-xl border px-4 py-3 text-sm"
+              value={stock}
+              onChange={(e) => setStock(parseInt(e.target.value) || 0)}
+              min={0}
+            />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-6">

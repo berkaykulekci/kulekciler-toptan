@@ -6,7 +6,7 @@ export default async function AdminProductsList() {
 
   const { data } = await supabase
     .from("products")
-    .select("id,name,category,is_active,is_featured,created_at")
+    .select("id,name,category,is_active,is_featured,stock,created_at")
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -31,6 +31,7 @@ export default async function AdminProductsList() {
             <tr>
               <th className="px-4 py-3">Ürün</th>
               <th className="px-4 py-3">Kategori</th>
+              <th className="px-4 py-3">Stok</th>
               <th className="px-4 py-3">Durum</th>
               <th className="px-4 py-3">Öne Çıkan</th>
               <th className="px-4 py-3"></th>
@@ -41,6 +42,7 @@ export default async function AdminProductsList() {
               <tr key={p.id} className="border-t">
                 <td className="px-4 py-3 font-medium">{p.name}</td>
                 <td className="px-4 py-3">{p.category}</td>
+                <td className="px-4 py-3 font-mono">{p.stock}</td>
                 <td className="px-4 py-3">
                   {p.is_active ? (
                     <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">Aktif</span>
