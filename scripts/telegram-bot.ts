@@ -221,7 +221,7 @@ bot.on("message", async (msg) => {
         session.category = msg.text.trim();
         session.step = "awaiting_featured";
 
-        return bot.sendMessage(chatId, `✅ Kategori: ${session.category}\n⭐ Bu ürün "Öne Çıkanlar" listesine eklensin mi?`, {
+        return bot.sendMessage(chatId, `✅ Kategori: ${session.category}\n\n⭐ Bu ürün "Öne Çıkanlar" listesine eklensin mi?`, {
             reply_markup: {
                 inline_keyboard: [
                     [
@@ -236,11 +236,15 @@ bot.on("message", async (msg) => {
 
 // Handle Callback Queries (Featured Yes/No)
 bot.on("callback_query", async (query) => {
+
     const chatId = query.message?.chat.id;
     if (!chatId) return;
 
     const session = getSession(chatId);
-    if (session.step !== "awaiting_featured") return;
+
+    if (session.step !== "awaiting_featured") {
+        return;
+    }
 
     const isFeatured = query.data === "featured_yes";
     session.is_featured = isFeatured;
