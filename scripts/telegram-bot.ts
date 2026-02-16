@@ -21,14 +21,30 @@ if (!TELEGRAM_TOKEN || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+// Helper: Slugify
+function slugify(text: string): string {
+    return text
+        .toLowerCase()
+        .replace(/ğ/g, "g")
+        .replace(/ü/g, "u")
+        .replace(/ş/g, "s")
+        .replace(/ı/g, "i")
+        .replace(/ö/g, "o")
+        .replace(/ç/g, "c")
+        .replace(/[^a-z0-9]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+}
+
 // State management (in-memory)
 interface UserSession {
-    step: "idle" | "awaiting_photos" | "awaiting_title" | "awaiting_stock" | "awaiting_description" | "awaiting_category";
+    step: "idle" | "awaiting_photos" | "awaiting_title" | "awaiting_stock" | "awaiting_description" | "awaiting_category" | "awaiting_featured";
     photos: string[]; // Array of file_ids from Telegram
     title?: string;
     stock?: number;
     description?: string;
     category?: string;
+    is_featured?: boolean;
 }
 
 const sessions: Record<number, UserSession> = {};
@@ -185,82 +201,132 @@ bot.on("message", async (msg) => {
         );
     }
 
-    // Step 5: Category -> Process
+
+
+    // State management (in-memory)
+    interface UserSession {
+        step: "idle" | "awaiting_photos" | "awaiting_title" | "awaiting_stock" | "awaiting_description" | "awaiting_category" | "awaiting_featured";
+        photos: string[];
+        title?: string;
+        stock?: number;
+        description?: string;
+        category?: string;
+        is_featured?: boolean;
+    }
+
+    // ... existing code ...
+
+    // Step 5: Category -> Ask Featured
     if (session.step === "awaiting_category") {
         session.category = msg.text.trim();
-        session.step = "idle"; // Prevent re-entry
+        session.step = "awaiting_featured";
 
-        bot.sendMessage(chatId, "⏳ İşleniyor... Fotoğraflar yükleniyor ve ürün kaydediliyor. Lütfen bekleyin.");
+        return bot.sendMessage(chatId, `✅ Kategori: ${session.category}\n⭐ Bu ürün "Öne Çıkanlar" listesine eklensin mi?`, {
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        { text: "Evet, Ekle", callback_data: "featured_yes" },
+                        { text: "Hayır, Ekleme", callback_data: "featured_no" },
+                    ],
+                ],
+            },
+        });
+    }
+});
 
-        try {
-            // 1. Download and Upload Photos
-            const imageUrls: string[] = [];
-            for (const fileId of session.photos) {
-                const localPath = await downloadTelegramPhoto(fileId);
-                const publicUrl = await uploadToSupabase(localPath);
-                if (publicUrl) imageUrls.push(publicUrl);
+// Handle Callback Queries (Featured Yes/No)
+bot.on("callback_query", async (query) => {
+    const chatId = query.message?.chat.id;
+    if (!chatId) return;
 
-                // Clean up
-                try { fs.unlinkSync(localPath); } catch { }
-            }
+    const session = getSession(chatId);
+    if (session.step !== "awaiting_featured") return;
 
-            if (imageUrls.length === 0) {
-                throw new Error("Fotoğraflar yüklenemedi.");
-            }
+    const isFeatured = query.data === "featured_yes";
+    session.is_featured = isFeatured;
+    session.step = "idle"; // Prevent re-entry
 
-            // 2. Insert into Supabase
-            // Generate slug
-            const slug = (session.title || "urun")
-                .toLowerCase()
-                .replace(/ğ/g, "g")
-                .replace(/ü/g, "u")
-                .replace(/ş/g, "s")
-                .replace(/ı/g, "i")
-                .replace(/ö/g, "o")
-                .replace(/ç/g, "c")
-                .replace(/[^a-z0-9]/g, "-")
-                .replace(/-+/g, "-")
-                .replace(/^-|-$/g, "") + `-${Date.now()}`; // Ensure uniqueness
+    // Remove buttons
+    bot.editMessageReplyMarkup({ inline_keyboard: [] }, { chat_id: chatId, message_id: query.message?.message_id });
+    bot.sendMessage(chatId, `👍 Tercih alındı: ${isFeatured ? "Öne Çıkan" : "Standart"}\n⏳ İşleniyor... Lütfen bekleyin.`);
 
-            const { data: productData, error: dbError } = await supabase
-                .from("products")
-                .insert({
-                    name: session.title,
-                    slug: slug,
-                    description: session.description,
-                    category: session.category,
-                    stock: session.stock,
-                    package_info: "", // Optional, left empty for now
-                    is_active: true,
-                    is_featured: false,
-                })
+    try {
+        // 0. Check and Insert Category if not exists
+        if (session.category) {
+            const catSlug = slugify(session.category);
+            // Try to find category
+            const { data: existingCat } = await supabase
+                .from("categories")
                 .select("id")
+                .eq("slug", catSlug)
                 .single();
 
-            if (dbError) throw dbError;
+            if (!existingCat) {
+                bot.sendMessage(chatId, `ℹ️ Yeni kategori tespit edildi: "${session.category}". Sisteme ekleniyor...`);
+                const { error: catError } = await supabase
+                    .from("categories")
+                    .insert({ name: session.category, slug: catSlug });
 
-            // 3. Insert Images
-            const imageRecords = imageUrls.map((url, index) => ({
-                product_id: productData.id,
-                image_url: url,
-                sort_order: index,
-            }));
-
-            const { error: imgError } = await supabase
-                .from("product_images")
-                .insert(imageRecords);
-
-            if (imgError) console.error("Image Insert Error:", imgError);
-
-            bot.sendMessage(chatId, `✅ Ürün Başarıyla Eklendi!\n\n📦 **${session.title}**\n💰 Stok: ${session.stock}\n📄 Açıklama: ${session.description}\n📂 Kategori: ${session.category}\n\n🔗 Link: https://kulekciler.com/urunler/${slug}`);
-
-        } catch (error: any) {
-            console.error("Process Error:", error);
-            bot.sendMessage(chatId, `❌ Bir hata oluştu: ${error.message}`);
-        } finally {
-            // Reset session
-            sessions[chatId] = { step: "idle", photos: [] };
+                if (catError) console.error("Category creation error:", catError);
+            }
         }
+
+        // 1. Download and Upload Photos
+        const imageUrls: string[] = [];
+        for (const fileId of session.photos) {
+            const localPath = await downloadTelegramPhoto(fileId);
+            const publicUrl = await uploadToSupabase(localPath);
+            if (publicUrl) imageUrls.push(publicUrl);
+
+            // Clean up
+            try { fs.unlinkSync(localPath); } catch { }
+        }
+
+        if (imageUrls.length === 0) {
+            throw new Error("Fotoğraflar yüklenemedi.");
+        }
+
+        // 2. Insert into Supabase
+        const slug = slugify(session.title || "urun") + `-${Date.now()}`;
+
+        const { data: productData, error: dbError } = await supabase
+            .from("products")
+            .insert({
+                name: session.title,
+                slug: slug,
+                description: session.description,
+                category: session.category,
+                stock: session.stock,
+                package_info: "",
+                is_active: true,
+                is_featured: session.is_featured,
+            })
+            .select("id")
+            .single();
+
+        if (dbError) throw dbError;
+
+        // 3. Insert Images
+        const imageRecords = imageUrls.map((url, index) => ({
+            product_id: productData.id,
+            image_url: url,
+            sort_order: index,
+        }));
+
+        const { error: imgError } = await supabase
+            .from("product_images")
+            .insert(imageRecords);
+
+        if (imgError) console.error("Image Insert Error:", imgError);
+
+        bot.sendMessage(chatId, `✅ Ürün Başarıyla Eklendi!\n\n📦 **${session.title}**\n💰 Stok: ${session.stock}\n📂 Kategori: ${session.category}\n⭐ Öne Çıkan: ${session.is_featured ? "Evet" : "Hayır"}\n\n🔗 Link: https://kulekciler.com/urunler/${slug}`);
+
+    } catch (error: any) {
+        console.error("Process Error:", error);
+        bot.sendMessage(chatId, `❌ Bir hata oluştu: ${error.message}`);
+    } finally {
+        // Reset session
+        sessions[chatId] = { step: "idle", photos: [] };
     }
 });
 
